@@ -39,6 +39,15 @@ public:
 		return Value2Vector;
 	}
 
+	std::vector<double> * GetValVector1()
+	{
+		return &Value1Vector;
+	}
+
+	std::vector<double> * GetValVector2()
+	{
+		return &Value2Vector;
+	}
 
 private:
 	std::ofstream DataFile;
@@ -53,7 +62,8 @@ private:
 		               Value2Vector;
 	string line, 
 		   word, 
-		   temp;
+		   temp,
+		test;
 	stringstream lineread;
 
 	std::vector<std::string>   result;

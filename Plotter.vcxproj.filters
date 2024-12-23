@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Plotter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pbPlots.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,11 +27,14 @@
     <ClCompile Include="TestWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MainFunc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphPlotter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\pbPlots.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\supportLib.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -45,6 +45,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\SerialPortSelection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\pbPlots.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GraphPlotter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

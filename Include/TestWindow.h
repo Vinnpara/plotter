@@ -11,6 +11,11 @@
 
 #include <Windows.h>
 #include <SerialPortSelection.h>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 #define ID_BUTTON 1
 #define ID_BUTTON_1 2 //Identifier forCOM 1
@@ -29,6 +34,12 @@
 #define ID_BUTTON_14 15
 #define ID_BUTTON_START_RECORD 16
 #define ID_BUTTON_STOP_RECORD 17
+#define ID_BUTTON_LOAD_DATA 18
+#define ID_BUTTON_VERIFY_DATA 19
+#define ID_BUTTON_PLOT_GRAPH 20
+#define ID_RESET_PLOTS 21
+
+#define MAX_CHAR_SIZE 64
 
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -62,7 +73,6 @@ static bool Board1Selection[15],
 
 
 
-
 class TestWindow
 {
 public:
@@ -75,6 +85,8 @@ public:
 	void Assignments();
 	bool ProcessMessages();
 
+	LRESULT CALLBACK WindProcplt(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 	void UpdateDaignostcs(double Pitc_val, double Roll_val, double Yaw_val, unsigned long time);
 	void UpdateDaignostcs(double Pitc_val, double Roll_val, double Yaw_val, bool ValidPitch, bool ValidRoll, unsigned long Time);
 	void UpdateAccelDiag(double AccelX_val, double AccelY_val, double AccelZ_val);
@@ -84,7 +96,11 @@ public:
 	void UpdateMotorSteering(int Steer, int Throttle);
 	void DisplayDiagnostics();
 
+	void SetTextBuffer();
 
+	void UpdatePlotNames();
+
+	void GetTextTest();
 
 	LPWSTR GetPitchWritten()
 	{
@@ -110,8 +126,46 @@ public:
 
 	bool RecStartStatus();
 	bool RecStopStatus();
+	bool LoadButton,
+		 PlotButton;
+
+	bool LoadButtonState();
+	bool PlotButtonState();
+
+	std::string GetFileName1() {
+		return FileNames[0];
+	}
+
+	std::string GetFileName2() {
+		return FileNames[1];
+	}
+
+	std::string GetFileName3() {
+		return FileNames[2];
+	}
+
+	std::string GetPlotName1() {
+		return PlotName[0];
+	}
+
+	std::string GetPlotName2() {
+		return PlotName[1];
+	}
+
+	std::string GetPlotName3() {
+		return PlotName[2];
+	}
+
+	void AutoResetPlot();
+	void AutoResetLoad();
+
+	std::vector<std::string> GetPlotFileName();
+	std::vector<std::string> GetPlotResultName();
 
 private:
+
+	std::string ConvertLPCWSTRToString(const LPCWSTR lpcwszStr);
+
 	HINSTANCE m_hInstance; //connected to application
 	HWND m_hWnd; //The actual window
 
@@ -138,6 +192,19 @@ private:
 	VelyWritten,
 	VelcWritten
 	;
+
+	std::string PlotName[10],
+		        FileNames[10];
+	char Plots;
+
+	//std::vector<wchar_t> PlotNameFiles[10];
+	std::vector<std::vector<wchar_t>> PlotSourceFileNames;
+	std::vector<std::vector<wchar_t>> PlotResultFileNames;
+
+	std::vector<std::string> PerfPlotResultName;
+
+	//wchar_t PlotFileNames[100];
+
 	bool PitchValid,
 		 RollValid;
 };

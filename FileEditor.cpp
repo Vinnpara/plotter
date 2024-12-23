@@ -9,6 +9,12 @@
 
 FileEditor::FileEditor()
 {
+    for (int i = 0; i < Value1Vector.size(); i++)
+        Value1Vector.push_back(0);
+
+    for (int i = 0; i < Value2Vector.size(); i++)
+        Value2Vector.push_back(0);
+
 
 }
 
@@ -31,7 +37,7 @@ FileEditor::FileEditor(string filename)
 void FileEditor::SetName(string Name) {
 
     name = Name;
-
+    std::cout << "\n NAME FED TO FILE EDITOR" << name;
 }
 
 void FileEditor::OpenFile() {

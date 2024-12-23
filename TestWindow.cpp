@@ -1,8 +1,13 @@
 #include <Windows.h>
-#include <string.h>
+#include <string>
 #include "TestWindow.h"
 #include <iostream>
 #include <sstream>
+
+#include <codecvt>
+#include <locale>
+
+
 
 static int Board1,
            Board2,
@@ -46,7 +51,63 @@ LPWSTR PitchWritten,
 unsigned long ElpasedTime;
 
 static bool RecStart,
-            RecStop;
+            RecStop,
+	        LoadButtonPressed,
+	        PlotButtonPressed,
+	        ResetButtonPressed;
+
+HWND PerfPlotName1,
+     PerfPlotName2,
+     PerfPlotName3,
+     PerfPlotName4,
+     PerfPlotName5,
+     PerfPlotName6,
+     PerfPlotName7,
+     PerfResult1,
+     PerfResult2,
+     PerfResult3,
+     PerfResult4,
+     PerfResult5,
+     PerfResult6,
+     PerfResult7;
+
+LPWSTR PerfPlotNameIn1,
+     PerfPlotNameIn2,
+     PerfPlotNameIn3,
+     PerfPlotNameIn4,
+     PerfPlotNameIn5,
+     PerfPlotNameIn6,
+     PerfPlotNameIn7;
+
+LPWSTR PerfResultName1,
+     PerfResultName2,
+     PerfResultName3,
+     PerfResultName4,
+     PerfResultName5,
+     PerfResultName6,
+     PerfResultName7;
+
+wchar_t PerfPlotResult1[100],
+        PerfPlotResult2[100],
+	    PerfPlotResult3[100],
+	    PerfPlotResult4[100],
+	    PerfPlotResult5[100],
+        PerfResultsName1[100],
+	    PerfResultsName2[100],
+	    PerfResultsName3[100],
+	    PerfResultsName4[100],
+	    PerfResultsName5[100];
+
+wchar_t PerfPlotResultCombined[10][100];
+
+LPWSTR PerfPlotNameInCombined[10][10];
+
+std::wstring PerfPlotnameWstring[10];
+
+std::vector<std::string> PerfPlotnameString;
+std::vector<std::string> PerfPlotnameStringRes;
+
+std::vector<std::vector<wchar_t>> PlotNameFiles[10];
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1294,6 +1355,409 @@ LRESULT CALLBACK WindProcDiag(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	return DefWindowProc(hWnd, uMsg, wParam, lParam); //return undefiened params as well
 }
 
+LRESULT CALLBACK WindProcPlot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	switch (uMsg)
+	{
+	case WM_CREATE: 
+	{
+		/*
+		Plotx text, plot file name, plot result name
+
+		*/
+		RECT Plot1;
+		Plot1.left = 30,
+			Plot1.top = 60,
+			Plot1.right = 100,
+			Plot1.bottom = 25
+			;
+
+		RECT Plot2;
+		Plot2.left = 30,
+			Plot2.top = 90,
+			Plot2.right = 100,
+			Plot2.bottom = 25
+			;
+
+		RECT Plot3;
+		Plot3.left = 30,
+			Plot3.top = 120,
+			Plot3.right = 100,
+			Plot3.bottom = 25
+			;
+
+		RECT Plot4;
+		Plot4.left = 30,
+			Plot4.top = 150,
+			Plot4.right = 100,
+			Plot4.bottom = 25
+			;
+
+		RECT Plot5;
+		Plot5.left = 30,
+			Plot5.top = 180,
+			Plot5.right = 100,
+			Plot5.bottom = 25
+			;
+
+		RECT Plot6;
+		Plot6.left = 30,
+			Plot6.top = 210,
+			Plot6.right = 100,
+			Plot6.bottom = 25
+			;
+
+		RECT Plot7;
+		Plot7.left = 30,
+			Plot7.top = 240,
+			Plot7.right = 100,
+			Plot7.bottom = 25
+			;
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Load data"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_LOAD_DATA,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Verify data"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top +35,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_VERIFY_DATA,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Plot"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top +70,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_PLOT_GRAPH,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Reset Plot"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top + 105,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_RESET_PLOTS,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 CreateWindow(TEXT("STATIC"), TEXT("Plot 1"),
+			WS_VISIBLE | WS_CHILD,
+			Plot1.left, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 PerfPlotName1 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 110, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 PerfResult1 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 210, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 2"),
+			WS_VISIBLE | WS_CHILD,
+			Plot2.left, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName2 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot2.left + 110, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult2 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot2.left + 210, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 3"),
+			WS_VISIBLE | WS_CHILD,
+			Plot3.left, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName3 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot3.left + 110, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult3 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot3.left + 210, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 4"),
+			WS_VISIBLE | WS_CHILD,
+			Plot4.left, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName4 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot4.left + 110, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult4 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot4.left + 210, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 5"),
+			WS_VISIBLE | WS_CHILD,
+			Plot5.left, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName5 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot5.left + 110, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult5 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot5.left + 210, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 6"),
+			WS_VISIBLE | WS_CHILD,
+			Plot6.left, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName6 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot6.left + 110, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult6 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot6.left + 210, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 7"),
+			WS_VISIBLE | WS_CHILD,
+			Plot7.left, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName7 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot7.left + 110, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult7 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot7.left + 210, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		break;
+
+	};
+
+	case WM_COMMAND:
+	{
+
+		if (LOWORD(wParam) == ID_BUTTON_LOAD_DATA)
+		{
+
+
+
+			GetWindowTextW(PerfPlotName1, PerfPlotResult1, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfPlotName2, PerfPlotResult2, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfPlotName3, PerfPlotResult3, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfPlotName4, PerfPlotResult4, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfPlotName5, PerfPlotResult5, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName6, PerfPlotNameIn6, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName7, PerfPlotNameIn7, MAX_CHAR_SIZE);
+
+			GetWindowTextW(PerfResult1, PerfResultsName1, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfResult2, PerfResultsName2, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfResult3, PerfResultsName3, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfResult4, PerfResultsName4, MAX_CHAR_SIZE);
+			GetWindowTextW(PerfResult5, PerfResultsName5, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult6, PerfResultName6, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult7, PerfResultName7, MAX_CHAR_SIZE);
+
+			LoadButtonPressed = 1;
+
+			std::wstring ws1(PerfPlotResult1);
+			std::string str1(ws1.begin(), ws1.end());
+			std::wstring ws2(PerfPlotResult2);
+			std::string str2(ws2.begin(), ws2.end());
+			std::wstring ws3(PerfPlotResult3);
+			std::string str3(ws3.begin(), ws3.end());
+
+			PerfPlotnameString.push_back(str1);
+			PerfPlotnameString.push_back(str2);
+			PerfPlotnameString.push_back(str3);
+
+			std::wstring ws1r(PerfResultsName1);
+			std::string str1r(ws1r.begin(), ws1r.end());
+			std::wstring ws2r(PerfResultsName2);
+			std::string str2r(ws2r.begin(), ws2r.end());
+			std::wstring ws3r(PerfResultsName3);
+			std::string str3r(ws3r.begin(), ws3r.end());
+
+			PerfPlotnameStringRes.push_back(str1r);
+			PerfPlotnameStringRes.push_back(str2r);
+			PerfPlotnameStringRes.push_back(str3r);
+
+			std::cout << "\nLoad ";
+			//std::cout << "\nLPWSTR " << PerfPlotNameIn1;
+			//std::cout << "\nWCHAR 1  " << PerfPlotnameString[0];
+			//std::cout << "\nWCHAR 2  " << PerfPlotnameString[1];
+			//std::cout << "\nWCHAR 3  " << PerfPlotnameString[2];
+			//PerfPlotName1->unused;
+
+			if (PerfPlotNameIn1 == NULL)
+				std::cout << "\nHWND is unused";
+			else
+				std::cout << "\nHWND used!";
+		}
+
+		if (LOWORD(wParam) == ID_BUTTON_PLOT_GRAPH)
+		{
+			PlotButtonPressed = 1;
+		}
+
+		if (LOWORD(wParam) == ID_RESET_PLOTS)
+		{
+			LoadButtonPressed = 0;
+			PlotButtonPressed = 0;
+		}
+			 
+		break;
+	}
+
+	case WM_CLOSE:
+		DestroyWindow(hWnd);
+		break;
+
+	case WM_DESTROY:
+		PostQuitMessage(0); //quit application once destroyed
+
+
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam); //return undefiened params as well
+
+
+}
+
 TestWindow::TestWindow()
 	:m_hInstance(GetModuleHandle(nullptr))
 {
@@ -1408,7 +1872,7 @@ TestWindow::TestWindow(bool Diagnotics)
 	else
 		wndClass.lpfnWndProc = WindProcDiag; //actual use of window procedure, its a function pointer*/
 
-	wndClassDiag.lpfnWndProc = WindProcDiag;
+	wndClassDiag.lpfnWndProc = WindProcPlot;
 
 	RegisterClass(&wndClassDiag);
 
@@ -1428,7 +1892,7 @@ TestWindow::TestWindow(bool Diagnotics)
 	m_hWnd = CreateWindowEx(  //Initialize m_hwnd object
 		0,
 		DIAG_CLASS_NAME,  //name
-		L"DIAGNOSTIC_WINDOW", //window tytle
+		L"PLOT_WINDOW", //window tytle
 		DiagStyle, //style must match all occurences
 		DiagRect.left,
 		DiagRect.top,
@@ -1447,6 +1911,406 @@ TestWindow::TestWindow(bool Diagnotics)
 
 }
 
+LRESULT CALLBACK TestWindow::WindProcplt(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+		switch (uMsg)
+	{
+	case WM_CREATE: 
+	{
+		/*
+		Plotx text, plot file name, plot result name
+
+		*/
+		RECT Plot1;
+		Plot1.left = 30,
+			Plot1.top = 60,
+			Plot1.right = 100,
+			Plot1.bottom = 25
+			;
+
+		RECT Plot2;
+		Plot2.left = 30,
+			Plot2.top = 90,
+			Plot2.right = 100,
+			Plot2.bottom = 25
+			;
+
+		RECT Plot3;
+		Plot3.left = 30,
+			Plot3.top = 120,
+			Plot3.right = 100,
+			Plot3.bottom = 25
+			;
+
+		RECT Plot4;
+		Plot4.left = 30,
+			Plot4.top = 150,
+			Plot4.right = 100,
+			Plot4.bottom = 25
+			;
+
+		RECT Plot5;
+		Plot5.left = 30,
+			Plot5.top = 180,
+			Plot5.right = 100,
+			Plot5.bottom = 25
+			;
+
+		RECT Plot6;
+		Plot6.left = 30,
+			Plot6.top = 210,
+			Plot6.right = 100,
+			Plot6.bottom = 25
+			;
+
+		RECT Plot7;
+		Plot7.left = 30,
+			Plot7.top = 240,
+			Plot7.right = 100,
+			Plot7.bottom = 25
+			;
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Load data"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_LOAD_DATA,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Verify data"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top +35,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_VERIFY_DATA,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Plot"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top +70,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_BUTTON_PLOT_GRAPH,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("BUTTON"), TEXT("Reset Plot"),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 350, Plot1.top + 105,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)ID_RESET_PLOTS,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 CreateWindow(TEXT("STATIC"), TEXT("Plot 1"),
+			WS_VISIBLE | WS_CHILD,
+			Plot1.left, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 PerfPlotName1 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 110, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		 PerfResult1 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot1.left + 210, Plot1.top,
+			Plot1.right, Plot1.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 2"),
+			WS_VISIBLE | WS_CHILD,
+			Plot2.left, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName2 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot2.left + 110, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult2 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot2.left + 210, Plot2.top,
+			Plot2.right, Plot2.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 3"),
+			WS_VISIBLE | WS_CHILD,
+			Plot3.left, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName3 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot3.left + 110, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult3 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot3.left + 210, Plot3.top,
+			Plot3.right, Plot3.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 4"),
+			WS_VISIBLE | WS_CHILD,
+			Plot4.left, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName4 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot4.left + 110, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult4 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot4.left + 210, Plot4.top,
+			Plot4.right, Plot4.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 5"),
+			WS_VISIBLE | WS_CHILD,
+			Plot5.left, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName5 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot5.left + 110, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult5 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot5.left + 210, Plot5.top,
+			Plot5.right, Plot5.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 6"),
+			WS_VISIBLE | WS_CHILD,
+			Plot6.left, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName6 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot6.left + 110, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult6 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot6.left + 210, Plot6.top,
+			Plot6.right, Plot6.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		CreateWindow(TEXT("STATIC"), TEXT("Plot 7"),
+			WS_VISIBLE | WS_CHILD,
+			Plot7.left, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfPlotName7 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot7.left + 110, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		PerfResult7 = CreateWindow(TEXT("EDIT"), TEXT("..."),
+			WS_VISIBLE | WS_CHILD | WS_BORDER,
+			Plot7.left + 210, Plot7.top,
+			Plot7.right, Plot7.bottom,
+			hWnd,
+			(HMENU)NULL,
+			NULL,
+			NULL
+		); //to create buttons, textboxes ect takes 11 args
+
+		break;
+
+	};
+
+	case WM_COMMAND:
+	{
+
+		if (LOWORD(wParam) == ID_BUTTON_LOAD_DATA)
+		{
+			wchar_t PerfPlotResult1[100];
+
+
+			GetWindowTextW(PerfPlotName1, PerfPlotResult1, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName2, PerfPlotNameIn2, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName3, PerfPlotNameIn3, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName4, PerfPlotNameIn4, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName5, PerfPlotNameIn5, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName6, PerfPlotNameIn6, MAX_CHAR_SIZE);
+			GetWindowText(PerfPlotName7, PerfPlotNameIn7, MAX_CHAR_SIZE);
+
+			GetWindowText(PerfResult1, PerfResultName1, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult2, PerfResultName2, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult3, PerfResultName3, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult4, PerfResultName4, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult5, PerfResultName5, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult6, PerfResultName6, MAX_CHAR_SIZE);
+			GetWindowText(PerfResult7, PerfResultName7, MAX_CHAR_SIZE);
+
+			LoadButtonPressed = 1;
+
+			std::wstring ws(PerfPlotResult1);
+			std::string str(ws.begin(), ws.end());
+
+			std::cout << "\nLoad ";
+			//std::cout << "\nLPWSTR " << PerfPlotNameIn1;
+			std::cout << "\WCHAR  " << str;
+			//PerfPlotName1->unused;
+
+			if (PerfPlotNameIn1 == NULL)
+				std::cout << "\nHWND is unused";
+			else
+				std::cout << "\nHWND used!";
+		}
+
+		if (LOWORD(wParam) == ID_BUTTON_PLOT_GRAPH)
+		{
+			PlotButtonPressed = 1;
+		}
+
+		if (LOWORD(wParam) == ID_RESET_PLOTS)
+		{
+			LoadButtonPressed = 0;
+			PlotButtonPressed = 0;
+		}
+			 
+		break;
+	}
+
+	case WM_CLOSE:
+		DestroyWindow(hWnd);
+		break;
+
+	case WM_DESTROY:
+		PostQuitMessage(0); //quit application once destroyed
+
+
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam); //return undefiened params as well
+
+}
+
+void TestWindow::SetTextBuffer() {
+
+	for (int i = 0; i < 10; i++)
+	{
+		std::vector<wchar_t> Text;
+
+		for (int j = 0; j < 100; j++) {
+
+			wchar_t Plt = NULL;
+			Text[j] = Plt;
+		}
+
+		//PlotNameFiles.push_back(Text);
+
+	}
+
+}
+
 void TestWindow::DisplayDiagnostics() {
 
 
@@ -1458,6 +2322,16 @@ TestWindow::~TestWindow()
 
 	UnregisterClass(CLASS_NAME, m_hInstance); //after using, unregister. The class name can be stored in the class, as a variable
 	std::cout << "\nWINDOW CLOSED  ";
+}
+
+std::vector<std::string> TestWindow::GetPlotFileName()
+{
+	return PerfPlotnameString;
+}
+
+std::vector<std::string> TestWindow::GetPlotResultName()
+{
+	return PerfPlotnameStringRes;
 }
 
 bool TestWindow::ProcessMessages() 
@@ -1524,6 +2398,25 @@ void TestWindow::UpdateDaignostcs(double Pitc_val, double Roll_val, double Yaw_v
 
 
 	//std::cout << "\nWINDOW PITCH VALUE.......  " << PitchWritten;
+}
+
+std::string TestWindow::ConvertLPCWSTRToString(const LPCWSTR lpcwszStr)
+{
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > converter;
+	std::wstring wstr(lpcwszStr);
+	return converter.to_bytes(wstr);
+}
+
+void TestWindow::UpdatePlotNames()
+{
+	
+	FileNames[0] = ConvertLPCWSTRToString(PerfPlotNameIn1);
+	FileNames[1] = ConvertLPCWSTRToString(PerfPlotNameIn2);
+	FileNames[2] = ConvertLPCWSTRToString(PerfPlotNameIn3);
+
+	PlotName[0] = ConvertLPCWSTRToString(PerfResultName1);
+	PlotName[1] = ConvertLPCWSTRToString(PerfResultName2);
+	PlotName[2] = ConvertLPCWSTRToString(PerfResultName3);
 }
 
 void TestWindow::UpdateVelDiag(float velx, float vely, float velcomp) {
@@ -1960,6 +2853,13 @@ void TestWindow::DrawDiagnostic(HWND hWnd) {
 
 };
 
+void TestWindow::GetTextTest()
+{
+
+	wchar_t *Text = PerfPlotNameIn1;
+	//std::cout << Text;
+}
+
 void TestWindow::Assignments() 
 {
 	board1 = Board1;
@@ -1995,4 +2895,32 @@ bool TestWindow::RecStopStatus()
 {
 	bool status = RecStop;
 	return status;
+}
+
+bool TestWindow::LoadButtonState() {
+	
+	LoadButton = LoadButtonPressed;
+	
+	return LoadButton;
+}
+
+bool TestWindow::PlotButtonState() {
+	
+	PlotButton = PlotButtonPressed;
+	
+	return PlotButton;
+}
+
+void TestWindow::AutoResetPlot() {
+
+	PlotButtonPressed = 0;
+
+
+}
+
+void TestWindow::AutoResetLoad() {
+
+	LoadButtonPressed = 0;
+
+
 }
